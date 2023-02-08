@@ -39,12 +39,15 @@ function isSimpleTCall(
 /**
  * Parse options of a `t(…)` call.
  * @param path: NodePath representing the second argument of the `t()` call
- *   (i.e. the i18next options)
+ *   (i.e. the i18next options or only default value)
+ * @param pathArg2 NodePath representing the third argument of the `t()` call
+ *   (i.e. the i18next options if exists)
  * @returns an object indicating whether the parsed options have context
  *   and/or count.
  */
 function parseTCallOptions(
   path: BabelCore.NodePath | undefined,
+  pathArg2: BabelCore.NodePath | undefined = undefined,
 ): ExtractedKey['parsedOptions'] {
   const res: ExtractedKey['parsedOptions'] = {
     contexts: false,
@@ -59,19 +62,25 @@ function parseTCallOptions(
   const optsEvaluation = evaluateIfConfident(path);
   if (typeof optsEvaluation === 'string') {
     res.defaultValue = optsEvaluation;
-  } else if (path.isObjectExpression()) {
+  }
+  let objPath = pathArg2?.isObjectExpression() && pathArg2;
+  objPath = objPath || (path?.isObjectExpression() && path);
+  if (objPath) {
     // It didn't work. Let's try to parse as object expression.
-    res.contexts = findKeyInObjectExpression(path, 'context') !== null;
-    res.hasCount = findKeyInObjectExpression(path, 'count') !== null;
+    res.contexts = findKeyInObjectExpression(objPath, 'context') !== null;
+    res.hasCount = findKeyInObjectExpression(objPath, 'count') !== null;
 
-    const nsNode = findKeyInObjectExpression(path, 'ns');
+    const nsNode = findKeyInObjectExpression(objPath, 'ns');
     if (nsNode !== null && nsNode.isObjectProperty()) {
       const nsValueNode = nsNode.get('value');
       const nsEvaluation = evaluateIfConfident(nsValueNode);
       res.ns = getFirstOrNull(nsEvaluation);
     }
 
-    const defaultValueNode = findKeyInObjectExpression(path, 'defaultValue');
+    const defaultValueNode = findKeyInObjectExpression(
+      objPath,
+      'defaultValue',
+    );
     if (defaultValueNode !== null && defaultValueNode.isObjectProperty()) {
       const defaultValueNodeValue = defaultValueNode.get('value');
       res.defaultValue = evaluateIfConfident(defaultValueNodeValue);
@@ -108,7 +117,7 @@ function extractTCall(
   return {
     key: keyEvaluation,
     parsedOptions: {
-      ...parseTCallOptions(args[1]),
+      ...parseTCallOptions(args[1], args[2]),
       ...parseI18NextOptionsFromCommentHints(path, commentHints),
     },
     sourceNodes: [path.node],

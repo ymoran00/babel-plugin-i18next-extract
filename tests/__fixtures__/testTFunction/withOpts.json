@@ -23,6 +23,8 @@
     "onlyCount": "",
     "onlyCount_plural": "",
     "onlyDefaultValue": "some default value",
+    "defaultValueAndOpts": "2nd default value",
+    "defaultValueAndOpts_plural": "",
     "onlyContext": "",
     "onlyContext_male": "",
     "onlyContext_female": "",

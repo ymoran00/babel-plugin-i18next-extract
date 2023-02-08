@@ -4,4 +4,5 @@ t('withSimpleIdentifiers', {count, context});
 t('onlyCount', {count});
 t('onlyContext', {context});
 t('onlyDefaultValue', 'some default value');
+t('defaultValueAndOpts', '2nd default value', {count: 2});
 t('withDefaultValue', {defaultValue: 'another default value'})
